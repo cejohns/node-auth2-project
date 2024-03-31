@@ -20,19 +20,24 @@ router.post("/login", checkUsernameExists, async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const [user] = await usersModel.findBy({ username });
+
     if (user && bcrypt.compareSync(password, user.password)) {
+      // JWT token generation happens only after verifying user credentials
       const token = jwt.sign({
         subject: user.user_id,
         username: user.username,
         role_name: user.role_name,
       }, JWT_SECRET, { expiresIn: '1d' }); // Token expires in 1 day
+
       res.status(200).json({ message: `${username} is back!`, token });
     } else {
       res.status(401).json({ message: "Invalid credentials" });
     }
   } catch (error) {
-    next(error);
+    next(error); // Pass any errors to the error handling middleware
   }
 });
+
+
 
 module.exports = router;
